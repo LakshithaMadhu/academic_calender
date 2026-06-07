@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Info, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 // --- Types ---
 type CourseCode = 'EEI4360' | 'EEI4370' | 'EEI5263' | 'EEI5265' | 'EEI5364' | 'EER6289' | 'EEW5611' | 'LLM5281' | 'MHJ5282' | 'MHJ5383' | 'MHZ5375';
@@ -216,9 +223,13 @@ export default function AcademicCalendar() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-4 md:p-8">
-      {/* MUI-like Paper Container */}
-      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-[0px_2px_1px_-1px_rgba(0,0,0,0.2),0px_1px_1px_0px_rgba(0,0,0,0.14),0px_1px_3px_0px_rgba(0,0,0,0.12)] overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 font-sans p-2 sm:p-4 md:p-8">
+      {/* Glassmorphic Paper Container */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-7xl mx-auto bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white overflow-hidden"
+      >
         
         {/* Header section */}
         <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-b border-gray-200">
@@ -230,28 +241,33 @@ export default function AcademicCalendar() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleToday}
-              className="px-4 py-1.5 text-sm font-medium uppercase tracking-wider text-blue-600 rounded hover:bg-blue-50 transition-colors mr-2"
+              className="px-4 py-1.5 text-sm font-medium uppercase tracking-wider text-blue-600 bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-colors mr-2"
             >
               Today
-            </button>
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-              <button 
+            </motion.button>
+            <div className="flex items-center bg-white/50 border border-gray-200 rounded-lg shadow-sm p-1 gap-1">
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={handlePrevMonth}
-                className="p-2 hover:bg-gray-100 transition active:bg-gray-200"
+                className="p-1.5 rounded-md hover:bg-white transition shadow-sm text-gray-600"
                 aria-label="Previous Month"
               >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className="w-px h-6 bg-gray-300"></div>
-              <button 
+                <ChevronLeft className="w-5 h-5" />
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={handleNextMonth}
-                className="p-2 hover:bg-gray-100 transition active:bg-gray-200"
+                className="p-1.5 rounded-md hover:bg-white transition shadow-sm text-gray-600"
                 aria-label="Next Month"
               >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
-              </button>
+                <ChevronRight className="w-5 h-5" />
+              </motion.button>
             </div>
           </div>
         </div>
@@ -259,8 +275,9 @@ export default function AcademicCalendar() {
         {/* Days of week header */}
         <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50/50">
           {DAYS_OF_WEEK.map((day) => (
-            <div key={day} className="py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              {day}
+            <div key={day} className="py-2 md:py-3 text-center text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <span className="md:hidden">{day.charAt(0)}</span>
+              <span className="hidden md:inline">{day}</span>
             </div>
           ))}
         </div>
@@ -275,7 +292,7 @@ export default function AcademicCalendar() {
             return (
               <div 
                 key={idx} 
-                className={`min-h-[140px] bg-white p-1.5 transition-colors ${!cell.day ? 'bg-gray-50/50' : 'hover:bg-gray-50/30'}`}
+                className={`min-h-[80px] md:min-h-[140px] bg-white p-1 md:p-1.5 transition-colors ${!cell.day ? 'bg-gray-50/50' : 'hover:bg-gray-50/30'}`}
               >
                 {cell.day && (
                   <div className="flex flex-col h-full">
@@ -286,17 +303,26 @@ export default function AcademicCalendar() {
                     </div>
                     
                     {/* Event List (Scrollable if too many) */}
-                    <div className="flex-1 overflow-y-auto max-h-[100px] space-y-1 no-scrollbar pr-1">
+                    <div className="flex-1 overflow-y-auto max-h-[60px] md:max-h-[100px] space-y-1 no-scrollbar pr-1">
                       {dayEvents.map(evt => (
-                        <div 
+                        <motion.div 
                           key={evt.id}
+                          layoutId={`event-${evt.id}`}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => setSelectedEvent(evt)}
-                          className={`text-[11px] leading-tight px-1.5 py-1 rounded border cursor-pointer truncate transition-all ${courseColors[evt.course]}`}
+                          className={cn("text-[11px] leading-tight p-0.5 md:px-1.5 md:py-1 rounded-md border cursor-pointer shadow-sm hover:shadow", courseColors[evt.course])}
                           title={`${evt.courseName}: ${evt.title}`}
                         >
-                          <span className="font-semibold block">{evt.startTime}</span>
-                          {evt.courseName} - {evt.title}
-                        </div>
+                          <div className="hidden md:block truncate">
+                            <span className="font-semibold block">{evt.startTime}</span>
+                            {evt.courseName} - {evt.title}
+                          </div>
+                          {/* Mobile view: abbreviation */}
+                          <div className="md:hidden text-[9px] font-bold text-center truncate">
+                            {evt.course.replace(/[^A-Z]/g, '')}
+                          </div>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
@@ -305,85 +331,113 @@ export default function AcademicCalendar() {
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
-      {/* MUI-like Modal Dialog for Event Details */}
-      {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity">
-          <div 
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all"
-            role="dialog"
-            aria-modal="true"
+      {/* Animated Native-Feeling Bottom Sheet / Modal */}
+      <AnimatePresence>
+        {selectedEvent && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedEvent(null)}
+            className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 bg-gray-900/40 backdrop-blur-sm"
           >
-            {/* Modal Header */}
-            <div className={`px-6 py-4 border-b ${courseColors[selectedEvent.course].split(' ')[0]} bg-opacity-30`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-medium text-gray-900">{selectedEvent.courseName}</h3>
-                  <p className="text-sm font-medium text-gray-600 mt-1">{selectedEvent.course}</p>
+            <motion.div 
+              layoutId={`event-${selectedEvent.id}`}
+              initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white/95 backdrop-blur-2xl rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-white/40 flex flex-col"
+              role="dialog"
+            >
+              {/* Drag Handle for mobile */}
+              <div className="w-full flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+                <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+              </div>
+
+              {/* Modal Header */}
+              <div className={cn("px-6 py-4 sm:pt-6 border-b bg-opacity-40 shrink-0", courseColors[selectedEvent.course].split(' ')[0])}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-xl font-medium text-gray-900">{selectedEvent.courseName}</h3>
+                    <p className="text-sm font-medium text-gray-700 mt-1">{selectedEvent.course}</p>
+                  </div>
+                  <motion.button 
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setSelectedEvent(null)}
+                    className="text-gray-500 hover:text-gray-800 transition-colors p-1.5 bg-white/50 rounded-full hover:bg-white shadow-sm"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
                 </div>
-                <button 
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-5 flex-1 overflow-y-auto">
+                <div className="flex items-start gap-4 text-gray-700">
+                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+                    <Info className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Activity</p>
+                    <p className="font-medium text-gray-900">{selectedEvent.title}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 text-gray-700">
+                  <div className="p-2 bg-purple-50 text-purple-600 rounded-lg shrink-0">
+                    <CalendarIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Date</p>
+                    <p className="font-medium text-gray-900">
+                      {new Date(selectedEvent.date).toLocaleDateString('en-GB', { 
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 text-gray-700">
+                  <div className="p-2 bg-orange-50 text-orange-600 rounded-lg shrink-0">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div>
+                     <p className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Time</p>
+                     <p className="font-medium text-gray-900">{selectedEvent.startTime} - {selectedEvent.endTime}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 text-gray-700">
+                  <div className="p-2 bg-green-50 text-green-600 rounded-lg shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Location / Centre</p>
+                    <p className="font-medium text-gray-900">{selectedEvent.location}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Modal Footer */}
+              <div className="px-6 py-5 bg-gray-50/80 backdrop-blur-md border-t border-gray-100 flex justify-end pb-8 sm:pb-5 shrink-0">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedEvent(null)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                  className="px-6 py-2.5 text-sm font-medium uppercase tracking-wider text-white bg-gray-900 rounded-lg shadow-md hover:bg-gray-800 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                  Done
+                </motion.button>
               </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-4">
-              <div className="flex items-start gap-3 text-gray-700">
-                <Info className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wide font-medium text-[10px]">Activity</p>
-                  <p className="font-medium">{selectedEvent.title}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 text-gray-700">
-                <CalendarIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wide font-medium text-[10px]">Date</p>
-                  <p className="font-medium">
-                    {new Date(selectedEvent.date).toLocaleDateString('en-GB', { 
-                      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-                    })}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 text-gray-700">
-                <Clock className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                   <p className="text-sm text-gray-500 uppercase tracking-wide font-medium text-[10px]">Time</p>
-                   <p className="font-medium">{selectedEvent.startTime} - {selectedEvent.endTime}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 text-gray-700">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wide font-medium text-[10px]">Location / Centre</p>
-                  <p className="font-medium">{selectedEvent.location}</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Modal Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="px-5 py-2 text-sm font-medium uppercase tracking-wider text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 shadow-sm transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Global styles block to hide scrollbar for nested event areas */}
       <style dangerouslySetInnerHTML={{__html: `
